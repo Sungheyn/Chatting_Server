@@ -16,10 +16,13 @@ class Login_Server {
     int epoll_fd, socket_fd;
     std::vector<room> Rooms;
     ClientDBManager DBManager;
-    char* ReadNickAndPass(char* buf, int len);
+
+    char m_buf[1024];
+
+    char* ReadNickAndPass(int len);
     bool MessageHandle();
     bool CloseHandle(int socket_fd);
-    bool LoginHandle(char* const buf, int socket_fd);
+    bool LoginHandle(int socket_fd);
 public:
     Login_Server() {
         socket_fd = 0;

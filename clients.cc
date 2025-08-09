@@ -1,4 +1,5 @@
-#include "src/header/server.hh"
+#include "src/header/server.hh" /** This must be converted into client-like */
+
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -7,9 +8,10 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
+
 void SetLoginChar(LoginProtocol* const dest, const char* nick, int const nickLen, const char* pass) {
     dest->Content[0] = 'L';
-    strcpy(dest->Content+1, nick);   
+    strcpy(dest->Content+1, nick);
     strcpy(dest->Content+nickLen+1, "|");
     strcpy(dest->Content+nickLen+2, pass);
 }
@@ -21,13 +23,13 @@ void RecvThread(int socket_fd) {
     }
 }
 int main() {
-        int sockets = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        const int sockets = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         sockaddr_in serverAddr;
         serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(8080);
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        int co = connect(sockets, (sockaddr*)&serverAddr, sizeof(serverAddr));
+        const int co = connect(sockets, (sockaddr*)&serverAddr, sizeof(serverAddr));
         std::string s;
         std::string p;
         std::string n;
