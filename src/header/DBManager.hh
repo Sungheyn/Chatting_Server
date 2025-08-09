@@ -7,7 +7,6 @@
 #include "rapidjson/pointer.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/ostreamwrapper.h"
-#include <cstring>
 #include <fstream>
 #include <string>
 
