@@ -1,4 +1,4 @@
-#include "src/header/server.hh"
+#include "server.hh"
 #include <cstdio>
 #include <cstring>
 #include <iostream>

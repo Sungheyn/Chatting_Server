@@ -1,9 +1,10 @@
-#include "header/DBManager.hh"
-#include "header/rapidjson/document.h"
-#include "header/rapidjson/rapidjson.h"
-#include "header/rapidjson/stringbuffer.h"
-#include "header/rapidjson/filereadstream.h"
-#include "header/rapidjson/writer.h"
+#include "DBManager.hh"
+#include "rapidjson/document.h"
+#include "rapidjson/rapidjson.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/filereadstream.h"
+#include "rapidjson/writer.h"
+#include <cassert>
 #include <fstream>
 #include <cstdio>
 
@@ -24,7 +25,7 @@ void ClientDBManager::ApplyChange() {
     rapidjson::StringBuffer buf;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buf);
     d.Accept(writer);
-    std::ofstream ofile("/home/discopse/Documents/clients.json");
+    std::ofstream ofile(location);
     if (ofile.is_open()) {
         ofile << buf.GetString();
         ofile.close();
@@ -33,10 +34,18 @@ void ClientDBManager::ApplyChange() {
 int ClientDBManager::GetMemberLength() {
     return d.MemberCount();
 }
-ClientDBManager::ClientDBManager() {
-    FILE* fp = std::fopen("/home/discopse/Documents/clients.json", "rb");
-    char readbuf[65536];
-    rapidjson::FileReadStream is(fp, readbuf, sizeof(readbuf));
-    d.ParseStream(is);
-    std::fclose(fp);
+ClientDBManager::ClientDBManager(const char* loc) {
+    location = std::string(loc);
+}
+void ClientDBManager::Setup() {
+    if (location == "") { assert(!"You must call ClientDBManager.SetJsonFileLocation(const char* loc) first."); }
+    else {
+        FILE* fp = std::fopen(location.c_str(), "r");
+        if (fp != nullptr) {
+            char readbuf[65536];
+            rapidjson::FileReadStream is(fp, readbuf, sizeof(readbuf));
+            d.ParseStream(is);
+            std::fclose(fp);
+        }
+    }
 }

@@ -5,12 +5,8 @@
 #include <arpa/inet.h>
 #include <vector>
 struct client {
-    client(int socket_fd, std::string id, char* nickname, char* password) {
-        this->socket_fd = socket_fd;
-        this->id = id;
-        this->nickname = std::string(nickname);
-        this->password = std::string(password);
-    }
+    client(int socket_fd,const char* id, char* nickname, char* password) 
+    : socket_fd(socket_fd), id(id), nickname(nickname), password(password) {}
     int socket_fd;
     std::string id;
     std::string nickname;

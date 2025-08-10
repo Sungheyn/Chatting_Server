@@ -1,6 +1,6 @@
-#include "header/server.hh"
-#include "header/client.hh"
-#include "header/DBManager.hh"
+#include "server.hh"
+#include "client.hh"
+#include "DBManager.hh"
 #include <netinet/in.h>
 #include <string>
 #include <sys/epoll.h>
@@ -22,24 +22,25 @@ bool Login_Server::Setup() {
     epoll_event event;
     event.events = EPOLLIN;
     event.data.fd = socket_fd;
+    DBManager.Setup();
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd,&event);
     return true;
 };
-char* Login_Server::ReadNickAndPass(char* buf, int len) {
-    for (int i = 1;i < len;i++) {
-        if (buf[i] == '|') {
-            buf[i] = 0;
-            return buf+i;
+char* Login_Server::ReadNickAndPass() {
+
+    for (int i = 1;i < sizeof(m_buf);i++) {
+        if (m_buf[i] == '|') {
+            m_buf[i] = 0;
+            return m_buf+i;
         }
     }
     return nullptr;
 }
 bool Login_Server::ReadyForRecv() {
     epoll_event events[512];
-    char buf[1024];
     epoll_event event;
     while (true) {
-        int cnt = epoll_wait(epoll_fd, events, 511, -1);
+        int cnt = epoll_wait(epoll_fd, events, 512, -1);
         for (int i = 0; i < cnt; i++) {
             if (events[i].events == EPOLLIN && events[i].data.fd == socket_fd) {
                 puts("Event Found");
@@ -50,25 +51,25 @@ bool Login_Server::ReadyForRecv() {
                 event.data.fd = client_fd;
                 epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event);
             } else if (events[i].events == EPOLLIN && events[i].data.fd != socket_fd) {
-                memset(buf, 0, 1024);
-                int flags = 0;
-                int n = recv(events[i].data.fd, buf, 1024, flags);
+                memset(m_buf, 0, 1024);
+                constexpr int flags = 0;
+                int n = recv(events[i].data.fd, m_buf, 1024, flags);
                 if (n == 0) {
                     if (CloseHandle(events[i].data.fd)) return false;
                 }
-                if (buf[0] == 'L') { LoginHandle(buf, events[i].data.fd); }
-                else if (buf[0] == 'M') { MessageHandle(); }
+                if (m_buf[0] == 'L') { LoginHandle( events[i].data.fd); }
+                else if (m_buf[0] == 'M') { MessageHandle(); }
             }
         }
     }
 }
-bool Login_Server::LoginHandle(char* const buf, int socket_fd) {
-    if (buf[0] == 'L') {
-        char* I = ReadNickAndPass(buf, 1024);          
-        std::string id(buf+1);
+bool Login_Server::LoginHandle(int socket_fd) {
+    if (m_buf[0] == 'L') {
+        char* I = ReadNickAndPass();          
+        std::string id(m_buf+1);
         id.insert(0, std::to_string(1000+DBManager.GetMemberLength()));
         if (I == nullptr) { return false; }
-        client IClient(socket_fd, id, buf+1,I+1);
+        client IClient(socket_fd, id.c_str(), m_buf+1,I+1);
         std::string buff("Your id is :");
         buff.append(id);
         send(socket_fd, buff.c_str(), buff.size(), 0);
