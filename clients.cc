@@ -1,18 +1,10 @@
-#include "server.hh"
 #include <cstdio>
-#include <cstring>
 #include <iostream>
 #include <string>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
-void SetLoginChar(LoginProtocol* const dest, const char* nick, int const nickLen, const char* pass) {
-    dest->Content[0] = 'L';
-    strcpy(dest->Content+1, nick);   
-    strcpy(dest->Content+nickLen+1, "|");
-    strcpy(dest->Content+nickLen+2, pass);
-}
 void RecvThread(int socket_fd) {
     while (true) {
         char buf[1024];
@@ -31,14 +23,28 @@ int main() {
         std::string s;
         std::string p;
         std::string n;
-        std::cout << "Input nickname : ";
-        std::getline(std::cin, n);
-        std::cout << "Input password : ";
-        std::getline(std::cin, p);
-        char buf[DEFAULT_PROTOCOL_SIZE];
-        LoginProtocol proto;
-        SetLoginChar(&proto, n.c_str(), n.length(), p.c_str());
-        send(sockets, proto.Content, DEFAULT_PROTOCOL_SIZE, 0);
+        int a;
+        std::cout << "For login : 0, For Register : 1. : ";
+        std::cin >> a; 
+        if (a == 1) {
+            send(sockets, "L", 1, 0);
+            std::cout << "Input id : ";
+            std::getline(std::cin, n);
+            send(sockets, n.c_str(), n.size(), 0);
+            std::cout << "Input password : ";
+            std::getline(std::cin, p);
+            send(sockets, p.c_str(), p.size(), 0);
+        } else if (a == 0) {
+            send(sockets, "R", 1, 0);
+            std::cout << "Input nickname : ";
+            std::getline(std::cin, n);
+            send(sockets, n.c_str(), n.size(), 0);
+            std::cout << "Input password : ";
+            std::getline(std::cin, p);
+            send(sockets, p.c_str(), p.size(), 0);
+        }
+        
+        char buf[1024];
         std::thread t1(RecvThread, sockets);
         while (1) {
             std::getline(std::cin, s);

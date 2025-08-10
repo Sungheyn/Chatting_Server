@@ -4,7 +4,7 @@
 #include <string>
 
 class ClientDBManager {
-    std::string buf = std::string("");
+    std::string buf;
     std::string location;
     rapidjson::Document d;
     void ApplyChange();

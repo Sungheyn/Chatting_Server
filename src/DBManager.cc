@@ -2,11 +2,10 @@
 #include "rapidjson/document.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/stringbuffer.h"
-#include "rapidjson/filereadstream.h"
+#include "rapidjson/istreamwrapper.h"
 #include "rapidjson/writer.h"
 #include <cassert>
 #include <fstream>
-#include <cstdio>
 
 void ClientDBManager::AddClients(client& clients) {
     rapidjson::Value s(rapidjson::kStringType);
@@ -34,18 +33,28 @@ void ClientDBManager::ApplyChange() {
 int ClientDBManager::GetMemberLength() {
     return d.MemberCount();
 }
+ClientDBManager::ClientDBManager() {
+    location.clear();
+}
 ClientDBManager::ClientDBManager(const char* loc) {
-    location = std::string(loc);
+    location.clear();
+    location.append(loc);
+}
+void ClientDBManager::SetJsonFileLocation(const char* loc) {
+    location.clear();
+    location.append(loc);
 }
 void ClientDBManager::Setup() {
-    if (location == "") { assert(!"You must call ClientDBManager.SetJsonFileLocation(const char* loc) first."); }
+    if (location.empty()) { 
+        assert(!"You must call ClientDBManager.SetJsonFileLocation(const char* loc) first."); 
+        return;
+    }
     else {
-        FILE* fp = std::fopen(location.c_str(), "r");
-        if (fp != nullptr) {
-            char readbuf[65536];
-            rapidjson::FileReadStream is(fp, readbuf, sizeof(readbuf));
-            d.ParseStream(is);
-            std::fclose(fp);
+        std::ifstream ifs(location.c_str());
+        if (ifs.is_open()) {
+            rapidjson::IStreamWrapper isw(ifs);
+            d.ParseStream(isw);
+            ifs.close();
         }
     }
 }

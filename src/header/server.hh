@@ -7,19 +7,21 @@
 #include <vector>
 #define DEFAULT_QUEUE_SIZE 10
 #define DEFAULT_PROTOCOL_SIZE 1024
-struct LoginProtocol {
-    char Content[DEFAULT_PROTOCOL_SIZE+1];
+#define DEFAULT_EVENT_SIZE 512
+enum class LoginSig {
+    Login = 'L', Msg = 'M',
+    Register = 'R'
 };
 class Login_Server{
-    char m_buf[1024];
+    char m_buf[DEFAULT_PROTOCOL_SIZE];
     std::vector<client> clients;
     int epoll_fd, socket_fd;
     std::vector<room> Rooms;
-    ClientDBManager DBManager = ClientDBManager();
-    char* ReadNickAndPass();
+    ClientDBManager DBManager;
     bool MessageHandle();
     bool CloseHandle(int socket_fd);
-    bool LoginHandle(int socket_fd);
+    bool RegisterHandle(int socket_fd, client& client);
+    bool LoginHandle(int socket_fd, client& client);
 public:
     Login_Server(const char* loc) {
         DBManager.SetJsonFileLocation(loc);
@@ -27,7 +29,7 @@ public:
         epoll_fd = 0;
     }
     bool ReadyForRecv();
-    bool Setup();
+    bool Setup(int port);
     bool Stop();
 
 };
