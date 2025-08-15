@@ -9,7 +9,11 @@ endif()
 if (NOT DEFINED PORT)
     set(PORT 8080)
 endif()
+
 file (WRITE ${CMAKE_CURRENT_SOURCE_DIR}/src/header/main.h "#define FILE_PATH \"${FILE_PATH}\" \n\r#define PORT ${PORT}")
+find_package(RapidJSON REQUIRED)
 
 add_executable(MAIN ${source})
+
 target_include_directories(MAIN PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/header)
+target_link_libraries(MAIN ${RapidJSON_LIBRARIES})
