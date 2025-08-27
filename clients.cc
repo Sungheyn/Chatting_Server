@@ -5,10 +5,15 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
+bool ss = true, bsa = false;
 void RecvThread(int socket_fd) {
     while (true) {
         char buf[1024];
-        recv(socket_fd,buf,1024,0);
+        int n = recv(socket_fd,buf,1024,0);
+        if (n == 0) {
+            ss = false;
+            break;
+        }
         puts(buf);
     }
 }
@@ -26,15 +31,8 @@ int main() {
         int a;
         std::cout << "For login : 0, For Register : 1. : ";
         std::cin >> a; 
+        getchar();
         if (a == 1) {
-            send(sockets, "L", 1, 0);
-            std::cout << "Input id : ";
-            std::getline(std::cin, n);
-            send(sockets, n.c_str(), n.size(), 0);
-            std::cout << "Input password : ";
-            std::getline(std::cin, p);
-            send(sockets, p.c_str(), p.size(), 0);
-        } else if (a == 0) {
             send(sockets, "R", 1, 0);
             std::cout << "Input nickname : ";
             std::getline(std::cin, n);
@@ -42,13 +40,24 @@ int main() {
             std::cout << "Input password : ";
             std::getline(std::cin, p);
             send(sockets, p.c_str(), p.size(), 0);
+        } else if (a == 0) {
+            send(sockets, "L", 1, 0);
+            std::cout << "Input id : ";
+            std::getline(std::cin, n);
+            send(sockets, n.c_str(), n.size(), 0);
+            std::cout << "Input password : ";
+            std::getline(std::cin, p);
+            send(sockets, p.c_str(), p.size(), 0);
+            char buf[2];
+            recv(sockets, buf, 2, 0);
+            std::string s(buf);
+            if (!(s == "LS")) return -1;
         }
-        
         char buf[1024];
         std::thread t1(RecvThread, sockets);
-        while (1) {
+        while (ss) {
             std::getline(std::cin, s);
             if (s =="c") { close(sockets); }
-            send(sockets, buf, s.size(), 0);
+            send(sockets, s.c_str(), s.size(), 0);
         }
 }

@@ -12,6 +12,7 @@ struct client {
     std::string nickname;
     std::string password;
     std::string LoginSign;
+    int SorN = 0;
 };
 struct room {
     std::vector<client> clients; 

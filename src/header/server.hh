@@ -1,10 +1,11 @@
 #pragma once
-#include "DBManager.hh"
+#include "PacketHandler.hh"
 #include "client.hh"
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <vector>
+
 #define DEFAULT_QUEUE_SIZE 10
 #define DEFAULT_PROTOCOL_SIZE 1024
 #define DEFAULT_EVENT_SIZE 512
@@ -12,24 +13,18 @@ enum class LoginSig {
     Login = 'L', Msg = 'M',
     Register = 'R'
 };
-class Login_Server{
-    char m_buf[DEFAULT_PROTOCOL_SIZE];
-    std::vector<client> clients;
+class Login_Server {
+    PacketHandler packethandler;
     int epoll_fd, socket_fd;
-    std::vector<room> Rooms;
-    ClientDBManager DBManager;
-    bool MessageHandle();
+    std::vector<room> rooms;
     bool CloseHandle(int socket_fd);
-    bool RegisterHandle(int socket_fd, client& client);
-    bool LoginHandle(int socket_fd, client& client);
 public:
-    Login_Server(const char* loc) {
-        DBManager.SetJsonFileLocation(loc);
+    Login_Server(const char* loc, const char* mdbloc) : packethandler(loc, mdbloc) {
         socket_fd = 0;
         epoll_fd = 0;
     }
     bool ReadyForRecv();
-    bool Setup(int port);
+    int Setup(int port);
     bool Stop();
 
 };

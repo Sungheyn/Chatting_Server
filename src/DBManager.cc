@@ -1,4 +1,5 @@
 #include "DBManager.hh"
+#include "client.hh"
 #include <rapidjson/document.h>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/stringbuffer.h>
@@ -20,7 +21,7 @@ void ClientDBManager::AddClients(client& clients) {
     d.AddMember(id.Move(),a.Move(), d.GetAllocator());
     ApplyChange();
 }
-void ClientDBManager::ApplyChange() {
+void DBManager::ApplyChange() {
     rapidjson::StringBuffer buf;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buf);
     d.Accept(writer);
@@ -29,6 +30,15 @@ void ClientDBManager::ApplyChange() {
         ofile << buf.GetString();
         ofile.close();
     }
+}
+bool ClientDBManager::FindMember(const char* name, const char* pwd) {
+    if (!d.HasMember(name)) return false;
+    const rapidjson::Value& V = d[name];
+    const rapidjson::Value& m = V["password"];
+    const char* pwd_v = m.GetString();
+    std::string p(pwd);
+    std::string pw(pwd_v);
+    return p.compare(pw) == 0;
 }
 int ClientDBManager::GetMemberLength() {
     return d.MemberCount();
@@ -40,11 +50,11 @@ ClientDBManager::ClientDBManager(const char* loc) {
     location.clear();
     location.append(loc);
 }
-void ClientDBManager::SetJsonFileLocation(const char* loc) {
+void DBManager::SetJsonFileLocation(const char* loc) {
     location.clear();
     location.append(loc);
 }
-void ClientDBManager::Setup() {
+void DBManager::Setup() {
     if (location.empty()) { 
         assert(!"You must call ClientDBManager.SetJsonFileLocation(const char* loc) first."); 
         return;
