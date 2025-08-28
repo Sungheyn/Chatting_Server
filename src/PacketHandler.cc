@@ -24,16 +24,20 @@ int PacketHandler::RecvHandle(int fd) {
 }
 bool PacketHandler::MessageHandle(int i) {
     std::string s(m_buf);
-    if (!mdbmanager.AddMessage(clients[i].id.c_str(),s.c_str())) return false;
-    for (int j = 0; j < clients.size() && j != i; j++) {
-        s.insert(0, clients[i].id+" : ");
-        send(clients[j].socket_fd, s.c_str(), s.size(), 0);
+    std::string m;
+    m.append(clients[i].id+" : ");
+    m.append(s);
+    if (!mdbmanager.AddMessage(clients[i].id.c_str(), m_buf)) return false;
+    for (int j = 0; j < clients.size();  j++) {
+        if (i == j) continue;
+        send(clients[j].socket_fd, m.c_str(), m.size(), 0);
     }
+    puts(s.c_str());
     return true;
 }
 void PacketHandler::PacketHandle(epoll_event events) {
-    int i = 0;
-    for (auto& client : clients) {
+    for (int i = 0; i < clients.size(); i++) {
+        client& client = clients[i];
         if (client.socket_fd != events.data.fd) continue;
         if (!client.LoginSign.empty()) {
             switch (client.LoginSign[0]) {
@@ -80,7 +84,6 @@ void PacketHandler::PacketHandle(epoll_event events) {
             client.LoginSign.clear();
             client.LoginSign.append(m_buf);
         }
-        i++;
     } 
 }
 void PacketHandler::CloseHandle(int socket_fd) {
